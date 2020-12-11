@@ -228,13 +228,9 @@ void check_solution(const unsigned int ntimes, std::vector<T, Allocator<T>>& a, 
 
   for (unsigned int i = 0; i < ntimes; i++)
   {
-    // Do STREAM!
-    if (!triad_only)
-    {
-      goldC = goldA;
-      goldB = scalar * goldC;
-      goldC = goldA + goldB;
-    }
+    goldC = goldA;
+    goldB = scalar * goldC;
+    goldC = goldA + goldB;
     goldA = goldB + scalar * goldC;
   }
 
@@ -265,7 +261,7 @@ void check_solution(const unsigned int ntimes, std::vector<T, Allocator<T>>& a, 
       << "Validation failed on c[]. Average error " << errC
       << std::endl;
   // Check sum to 8 decimal places
-  if (!triad_only && errSum > 1.0E-8)
+  if (errSum > 1.0E-8)
     std::cerr
       << "Validation failed on sum. Error " << errSum
       << std::endl << std::setprecision(15)
