@@ -99,9 +99,9 @@ template <typename T> class Stream {
     // Kernels
     // These must be blocking calls
     virtual void copy() = 0;
-    virtual void mul(const T &&s) = 0;
+    virtual void mul(const T &s) = 0;
     virtual void add() = 0;
-    virtual void triad(const T &&s) = 0;
+    virtual void triad(const T &s) = 0;
     virtual T dot() = 0;
 
     // Copy memory between host and device
@@ -113,20 +113,20 @@ template <typename T, typename Policy, template<typename Tp> class Allocator> cl
   protected:
     // Device side refs
     Policy &p;
-    std::vector<T, Allocator<T>> &a;
-    std::vector<T, Allocator<T>> &b;
-    std::vector<T, Allocator<T>> &c;
+    std::vector<T, Allocator<T>> a;
+    std::vector<T, Allocator<T>> b;
+    std::vector<T, Allocator<T>> c;
 
   public:
-    PSTLStream(Policy &p_, std::vector<T, Allocator<T>> &a_, std::vector<T, Allocator<T>> &b_, std::vector<T, Allocator<T>> &c_) : p(p_), a(a_), b(b_), c(c_)
+    PSTLStream(Policy &p_, const int N) : p(p_), a(N), b(N), c(N)
     {}
     ~PSTLStream()
     {}
 
     virtual void copy()             override;
     virtual void add()              override;
-    virtual void mul(const T &&s)   override;
-    virtual void triad(const T &&s) override;
+    virtual void mul(const T &s)   override;
+    virtual void triad(const T &s) override;
     virtual T dot()                 override;
 
     virtual void init_arrays(T &&initA, T &&initB, T &&initC) override;
@@ -147,11 +147,11 @@ void PSTLStream<T, Policy, Allocator>::copy()
 }
 
 template <typename T, typename Policy, template<typename Tp> class Allocator>
-void PSTLStream<T, Policy, Allocator>::mul(const T &&scalar)
+void PSTLStream<T, Policy, Allocator>::mul(const T &s_)
 {
-  const T s = scalar;
+  const T s = s_;
   const int N = b.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [&](auto i) { b[i] = s*c[i];});
+  std::for_each(p, counting_iterator(0), counting_iterator(N), [=](auto i) { b[i] = s*c[i];});
 }
 
 template <typename T, typename Policy, template<typename Tp> class Allocator>
@@ -162,11 +162,11 @@ void PSTLStream<T, Policy, Allocator>::add()
 }
 
 template <typename T, typename Policy, template<typename Tp> class Allocator>
-void PSTLStream<T, Policy, Allocator>::triad(const T &&scalar)
+void PSTLStream<T, Policy, Allocator>::triad(const T &s_)
 {
-  const T s   = scalar;
+  const T s   = s_;
   const int N = a.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [&](auto i) { a[i] = b[i] + s*c[i];});
+  std::for_each(p, counting_iterator(0), counting_iterator(N), [=](auto i) { a[i] = b[i] + s*c[i];});
 }
 
 template <typename T, typename Policy, template<typename Tp> class Allocator>

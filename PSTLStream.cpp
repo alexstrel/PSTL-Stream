@@ -92,9 +92,11 @@ void run()
   std::vector<T, AlignedAllocator<T>> c(N);
 
   auto policy = std::execution::par_unseq;
-  std::unique_ptr<Stream<T>> stream(new PSTLStream<T, decltype(policy), AlignedAllocator>(policy, a, b, c));
 
-  stream->init_arrays(0.1, 0.2, 0.0);
+  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), AlignedAllocator>(policy, N));
+
+  auto &stream = *stream_ptr;
+  stream.init_arrays(0.1, 0.2, 0.0);
 
   // List of times
   std::vector<std::vector<double>> timings(5);
@@ -105,35 +107,37 @@ void run()
   // Main loop
   T sum = 0.0;
 
+  const T scalar = 0.4;
+
   for (unsigned int k = 0; k < num_times; k++)
   {
     // Execute Copy
     t1 = std::chrono::high_resolution_clock::now();
-    stream->copy();
+    stream.copy();
     t2 = std::chrono::high_resolution_clock::now();
     timings[0].push_back(std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count());
 
     // Execute Mul
     t1 = std::chrono::high_resolution_clock::now();
-    stream->mul(0.4);
+    stream.mul(scalar);
     t2 = std::chrono::high_resolution_clock::now();
     timings[1].push_back(std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count());
 
     // Execute Add
     t1 = std::chrono::high_resolution_clock::now();
-    stream->add();
+    stream.add();
     t2 = std::chrono::high_resolution_clock::now();
     timings[2].push_back(std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count());
 
     // Execute Triad
     t1 = std::chrono::high_resolution_clock::now();
-    stream->triad(0.4);
+    stream.triad(scalar);
     t2 = std::chrono::high_resolution_clock::now();
     timings[3].push_back(std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count());
 
     // Execute Dot
     t1 = std::chrono::high_resolution_clock::now();
-    sum = stream->dot();
+    sum = stream.dot();
     t2 = std::chrono::high_resolution_clock::now();
     timings[4].push_back(std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count());
 
