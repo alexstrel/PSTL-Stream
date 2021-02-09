@@ -1,17 +1,38 @@
 #pragma once
 
+#ifdef DPCPP_BACKEND
+
+#include <oneapi/dpl/algorithm>
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/iterator>
+#include <oneapi/dpl/random>
+
+#else
+
+#include <algorithm>
+#include <execution>
+#include <numeric>
+
+#endif
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
-
-#include <algorithm>
 #include <vector>
 #include <memory>
-#include <numeric>
-#include <execution>
 
+//BACKEND selector
+#if defined(__NVCOMPILER_CUDA__)
 
-#ifndef __NVCOMPILER_CUDA__
+#include <thrust/iterator/counting_iterator.h>
+using namespace thrust;
+
+#elif defined (DPCPP_BACKEND)
+
+#include <CL/sycl.hpp>
+using oneapi::dpl::counting_iterator;
+
+#else
 
 #if defined(__INTEL_COMPILER)
 #include <malloc.h>
@@ -24,12 +45,7 @@ using namespace tbb;
 
 constexpr int alloc_align  = (2*1024*1024);
 
-#else
-
-#include <thrust/iterator/counting_iterator.h>
-using namespace thrust;
-
-#endif //__NVCOMPILER_CUDA__
+#endif //BACKEND selector
 
    template<typename Tp>
    struct AlignedAllocator {
@@ -60,7 +76,7 @@ using namespace thrust;
            std::cerr << " cudaMallocManaged failed for " << n*sizeof(Tp) << " bytes " <<cudaGetErrorString(err)<< std::endl;
            assert(0);
          }
-#else
+#elif !defined(DPCPP_BACKEND)
          //ptr = (Tp*)aligned_malloc(alloc_align, n*sizeof(Tp));
 #if defined(__INTEL_COMPILER)
          ptr = (Tp*)malloc(bytes);
@@ -76,7 +92,7 @@ using namespace thrust;
       void deallocate( Tp* p, std::size_t n) noexcept {
 #ifdef __NVCOMPILER_CUDA__
          cudaFree((void *)p);
-#else
+#elif !defined(DPCPP_BACKEND)
 
 #if defined(__INTEL_COMPILER)
          free((void*)p);
@@ -109,13 +125,13 @@ template <typename T> class Stream {
 };
 
 
-template <typename T, typename Policy, template<typename Tp> class Allocator> class PSTLStream : public Stream<T> {
+template <typename T, typename Policy, class Allocator> class PSTLStream : public Stream<T> {
   protected:
     // Device side refs
     Policy &p;
-    std::vector<T, Allocator<T>> a;
-    std::vector<T, Allocator<T>> b;
-    std::vector<T, Allocator<T>> c;
+    std::vector<T, Allocator> a;
+    std::vector<T, Allocator> b;
+    std::vector<T, Allocator> c;
 
   public:
     PSTLStream(Policy &p_, const int N) : p(p_), a(N), b(N), c(N)
@@ -132,7 +148,7 @@ template <typename T, typename Policy, template<typename Tp> class Allocator> cl
     virtual void init_arrays(T &&initA, T &&initB, T &&initC) override;
 };
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::init_arrays(T &&initA, T &&initB, T &&initC)
 {
   std::fill(p, a.begin(), a.end(), initA);
@@ -140,36 +156,36 @@ void PSTLStream<T, Policy, Allocator>::init_arrays(T &&initA, T &&initB, T &&ini
   std::fill(p, c.begin(), c.end(), initC);
 }
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::copy()
 {
   std::copy(p, a.begin(), a.end(), c.begin());
 }
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::mul(const T &s_)
 {
   const T s = s_;
   const int N = b.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [=](auto i) { b[i] = s*c[i];});
+  std::for_each(p, counting_iterator(0), counting_iterator(N), [=, b_= b.data(), c_ = c.data() ](const auto i) { b_[i] = s*c_[i];});
 }
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::add()
 {
   const int N    = c.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [&](auto i) { c[i] = a[i] + b[i];});
+  std::for_each(p, counting_iterator(0), counting_iterator(N), [a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { c_[i] = a_[i] + b_[i];});
 }
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::triad(const T &s_)
 {
   const T s   = s_;
   const int N = a.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [=](auto i) { a[i] = b[i] + s*c[i];});
+  std::for_each(p, counting_iterator(0), counting_iterator(N), [=, a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { a_[i] = b_[i] + s*c_[i];});
 }
 
-template <typename T, typename Policy, template<typename Tp> class Allocator>
+template <typename T, typename Policy, class Allocator>
 T PSTLStream<T, Policy, Allocator>::dot()
 {
   T sum = std::transform_reduce(p,
@@ -178,6 +194,6 @@ T PSTLStream<T, Policy, Allocator>::dot()
                                 b.begin(),
                                 static_cast<T>(0.0),
                                 std::plus<T>(),
-                                [=](auto &ai, auto &bi) { return ai*bi;} );
+                                [=](const auto &ai, const auto &bi) { return ai*bi;} );
   return sum;
 }
