@@ -134,7 +134,11 @@ template <typename T, typename Policy, class Allocator> class PSTLStream : publi
     std::vector<T, Allocator> c;
 
   public:
+#if !defined(DPCPP_BACKEND)  //var args!
     PSTLStream(Policy &p_, const int N) : p(p_), a(N), b(N), c(N)
+#else    
+    PSTLStream(Policy &p_, const int N, cl::sycl::usm_allocator<T, cl::sycl::usm::alloc::shared> alloc) : p(p_), a(N, alloc), b(N, alloc), c(N, alloc)
+#endif    
     {}
     ~PSTLStream()
     {}

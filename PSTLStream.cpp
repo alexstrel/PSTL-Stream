@@ -1,16 +1,14 @@
+#include "PSTLStream.h"
+
 #include <iostream>
 #include <vector>
-#include <numeric>
 #include <cmath>
 #include <limits>
 #include <chrono>
-#include <algorithm>
 #include <iomanip>
 #include <cstring>
 
 #define VERSION_STRING "0.1"
-
-#include "PSTLStream.h"
 
 // Default size of 2^25
 unsigned int N = 33554432;
@@ -88,10 +86,19 @@ void run()
 
   // Create objects
 #ifndef DPCPP_BACKEND  
+
   using alloc = AlignedAllocator<T>;
   
   auto policy = std::execution::par_unseq;  
+
+  std::vector<T, alloc> a(N);
+  std::vector<T, alloc> b(N);
+  std::vector<T, alloc> c(N);
+
+  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), alloc>(policy, N));
+
 #else
+
   sycl::queue q; //(sycl::gpu_selector{});
   
   cl::sycl::usm_allocator<T, cl::sycl::usm::alloc::shared> alloc_(q);
@@ -100,14 +107,14 @@ void run()
   
   auto policy = oneapi::dpl::execution::make_device_policy(q);
   //auto policy = oneapi::dpl::execution::dpcpp_default;  
-#endif  
 
-  std::vector<T, alloc> a(N);
-  std::vector<T, alloc> b(N);
-  std::vector<T, alloc> c(N);
+  std::vector<T, alloc> a(N, alloc_);
+  std::vector<T, alloc> b(N, alloc_);
+  std::vector<T, alloc> c(N, alloc_);
 
+  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), alloc>(policy, N, alloc_));
 
-  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), alloc>(policy, N));
+#endif
 
   auto &stream = *stream_ptr;
   stream.init_arrays(0.1, 0.2, 0.0);
