@@ -42,7 +42,11 @@ int main(int argc, char *argv[])
 
 
   if (use_float) run<float>();
+#ifndef DPCPP_BACKEND
   else run<double>();
+#else
+  else std::cout << "Double precision is not supported by Intel Xe GPUs, use --float option for single precision tests." << std::endl;
+#endif
  
   return 0;
 }
