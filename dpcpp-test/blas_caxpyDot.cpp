@@ -4,6 +4,12 @@
 // SPDX-License-Identifier: Apache-2.0
 // =============================================================
 
+// oneDPL headers should be included before standard headers!
+#include <oneapi/dpl/algorithm>
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/iterator>
+#include <oneapi/dpl/random>
+
 #include <chrono>
 #include <iostream>
 #include <vector>
@@ -11,10 +17,6 @@
 #include <complex>
 
 #include <CL/sycl.hpp>
-#include <oneapi/dpl/random>
-#include <oneapi/dpl/iterator>
-#include <oneapi/dpl/execution>
-#include <oneapi/dpl/algorithm>
 
 //#define N 500
 
@@ -39,12 +41,13 @@ int main() {
         std::complex<float> a{0.1f, 0.2f};
 
         auto policy = oneapi::dpl::execution::make_device_policy(q);
+        //auto policy = oneapi::dpl::execution::dpcpp_default;
 
         fill(policy, x.begin(), x.end(), std::complex<float>(1.0, 1.0));
         fill(policy, y.begin(), y.end(), std::complex<float>(2.0, 2.0));
 
         auto sum = transform_reduce( policy, counting_iterator(0), counting_iterator(N), std::complex<float>(0.0f, 0.0f), std::plus<std::complex<float>>{}
-                                    , [=, x_ = x.data(), y_ = y.data()](auto i) mutable {
+                                    , [=, x_ = x.data(), y_ = y.data()](const auto i) {
                                         y_[i] = a*x_[i]+y_[i];
                                         return (conj(y_[i])*x_[i]);
                                     });
