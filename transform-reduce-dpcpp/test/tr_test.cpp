@@ -10,10 +10,10 @@ template <typename T, typename count_t> struct compute_axpyDot {
   count_t n_items;
 
   compute_axpyDot(const T a_, const T *x_, T *y_,  count_t n) : a(a_), x(x_), y(y_), n_items(n) {}
-  //T operator() (count_t idx) const {
-  //  y[idx] = a*x[idx] + y[idx];
-  //  return (y[idx]*x[idx]);
-  //}
+  T operator() (count_t idx) const {
+    y[idx] = a*x[idx] + y[idx];
+    return (y[idx]*x[idx]);
+  }
   
   T operator() (count_t idx, count_t j) const {
     y[idx] = a*x[idx] + y[idx];
