@@ -3,6 +3,8 @@
 
 #include <transform_reduce_impl.h>
 
+#define USE_LAMBDA
+
 template <typename T, typename count_t> struct compute_axpyDot {
   const T *x;
   T *y;
@@ -10,12 +12,8 @@ template <typename T, typename count_t> struct compute_axpyDot {
   count_t n_items;
 
   compute_axpyDot(const T a_, const T *x_, T *y_,  count_t n) : a(a_), x(x_), y(y_), n_items(n) {}
-  T operator() (count_t idx) const {
-    y[idx] = a*x[idx] + y[idx];
-    return (y[idx]*x[idx]);
-  }
-  
-  T operator() (count_t idx, count_t j) const {
+
+  T operator() (count_t idx, count_t j = 0) const {
     y[idx] = a*x[idx] + y[idx];
     return (y[idx]*x[idx]);
   }
@@ -40,13 +38,16 @@ int main() {
 
   data_t a = 2.2f;
 
-  //std::cout << "Inputs x: "<<x[0]<<", "<<x[1]<<", ..., "<<x[n-1]<<std::endl;
-
+#ifndef USE_LAMBDA 
   std::unique_ptr< compute_axpyDot<data_t, int> > fn_ptr(new compute_axpyDot(a, x.data(), y.data(), n));
   auto &fn_ref = *fn_ptr;
   
   reduce_t r = impl::transform_reduce(p, n, 0.0f, ONEAPI::plus<data_t>(), fn_ref);
-  //reduce_t r = impl::transform_reduce(p, n, 0.0f, ONEAPI::plus<data_t>(), [=, x_ = x.data(), y_ = y.data()] (const int i ) {y_[i] = a*x_[i]+y_[i]; return (y_[i]*x_[i]);});
+#else
+  auto compute_axpyDot_ = [=, x_ = x.data(), y_ = y.data()] (const int i, const int j = 0) {y_[i] = a*x_[i]+y_[i]; return (y_[i]*x_[i]);};
+
+  reduce_t r = impl::transform_reduce(p, n, 0.0f, ONEAPI::plus<data_t>(), compute_axpyDot_);
+#endif
 
   q.wait();
   printf("r: %g\n", r);
