@@ -1,8 +1,8 @@
 #pragma once
 
-#include "device.h"
-#include "transform_reduce_helper.h"
-#include "tunable_reduction.h"
+#include <device.h>
+#include <transform_reduce_helper.h>
+#include <tunable_reduction.h>
 
 namespace impl
 {

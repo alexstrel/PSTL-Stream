@@ -1,24 +1,7 @@
 #include <vector>
 #include <cstdio>
 
-#include "device.h"
-#include "transform_reduce_impl.h"
-
-template <typename T> struct plus {
-  T operator()(T a, T b) { return a + b; }
-};
-
-template <typename T> struct maximum {
-  T operator()(T a, T b) { return a > b ? a : b; }
-};
-
-template <typename T> struct minimum {
-  T operator()(T a, T b) { return a < b ? a : b; }
-};
-
-template <typename T> struct identity {
-  T operator()(T a) { return a; }
-};
+#include <transform_reduce_impl.h>
 
 template <typename T, typename count_t> struct compute_axpyDot {
   const T *x;
@@ -27,10 +10,10 @@ template <typename T, typename count_t> struct compute_axpyDot {
   count_t n_items;
 
   compute_axpyDot(const T a_, const T *x_, T *y_,  count_t n) : a(a_), x(x_), y(y_), n_items(n) {}
-  T operator() (count_t idx) const {
-    y[idx] = a*x[idx] + y[idx];
-    return (y[idx]*x[idx]);
-  }
+  //T operator() (count_t idx) const {
+  //  y[idx] = a*x[idx] + y[idx];
+  //  return (y[idx]*x[idx]);
+  //}
   
   T operator() (count_t idx, count_t j) const {
     y[idx] = a*x[idx] + y[idx];
@@ -57,7 +40,7 @@ int main() {
 
   data_t a = 2.2f;
 
-  std::cout << "Inputs x: "<<x[0]<<", "<<x[1]<<", ..., "<<x[n-1]<<std::endl;
+  //std::cout << "Inputs x: "<<x[0]<<", "<<x[1]<<", ..., "<<x[n-1]<<std::endl;
 
   std::unique_ptr< compute_axpyDot<data_t, int> > fn_ptr(new compute_axpyDot(a, x.data(), y.data(), n));
   auto &fn_ref = *fn_ptr;

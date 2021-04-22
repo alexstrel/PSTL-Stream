@@ -1,6 +1,6 @@
 #pragma once
 
-#include "reduction_kernel.h"
+#include <reduction_kernel.h>
 #include <limits>
 
 namespace impl {

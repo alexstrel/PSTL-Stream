@@ -1,8 +1,5 @@
 #pragma once
 
-//#include "device.h"
-
-
 namespace impl {
 
   template <int block_size_y = 1>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <CL/sycl.hpp>
-#include "device.h"
+#include <device.h>
 
 using namespace sycl;
 
