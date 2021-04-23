@@ -107,6 +107,13 @@ constexpr int alloc_align  = (2*1024*1024);
 
 #define IMPLEMENTATION_STRING "PSTL"
 
+#ifdef DPCPP_BACKEND
+namespace pstl_impl = oneapi::dpl;
+#else
+namespace pstl_impl = std;
+#endif
+
+
 template <typename T> class Stream {
   public:
 
@@ -155,15 +162,15 @@ template <typename T, typename Policy, class Allocator> class PSTLStream : publi
 template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::init_arrays(T &&initA, T &&initB, T &&initC)
 {
-  std::fill(p, a.begin(), a.end(), initA);
-  std::fill(p, b.begin(), b.end(), initB);
-  std::fill(p, c.begin(), c.end(), initC);
+  pstl_impl::fill(p, a.begin(), a.end(), initA);
+  pstl_impl::fill(p, b.begin(), b.end(), initB);
+  pstl_impl::fill(p, c.begin(), c.end(), initC);
 }
 
 template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::copy()
 {
-  std::copy(p, a.begin(), a.end(), c.begin());
+  pstl_impl::copy(p, a.begin(), a.end(), c.begin());
 }
 
 template <typename T, typename Policy, class Allocator>
@@ -171,14 +178,14 @@ void PSTLStream<T, Policy, Allocator>::mul(const T &s_)
 {
   const T s = s_;
   const int N = b.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [=, b_= b.data(), c_ = c.data() ](const auto i) { b_[i] = s*c_[i];});
+  pstl_impl::for_each(p, counting_iterator(0), counting_iterator(N), [=, b_= b.data(), c_ = c.data() ](const auto i) { b_[i] = s*c_[i];});
 }
 
 template <typename T, typename Policy, class Allocator>
 void PSTLStream<T, Policy, Allocator>::add()
 {
   const int N    = c.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { c_[i] = a_[i] + b_[i];});
+  pstl_impl::for_each(p, counting_iterator(0), counting_iterator(N), [a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { c_[i] = a_[i] + b_[i];});
 }
 
 template <typename T, typename Policy, class Allocator>
@@ -186,18 +193,18 @@ void PSTLStream<T, Policy, Allocator>::triad(const T &s_)
 {
   const T s   = s_;
   const int N = a.size();
-  std::for_each(p, counting_iterator(0), counting_iterator(N), [=, a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { a_[i] = b_[i] + s*c_[i];});
+  pstl_impl::for_each(p, counting_iterator(0), counting_iterator(N), [=, a_ = a.data(), b_= b.data(), c_ = c.data()](const auto i) { a_[i] = b_[i] + s*c_[i];});
 }
 
 template <typename T, typename Policy, class Allocator>
 T PSTLStream<T, Policy, Allocator>::dot()
 {
-  T sum = std::transform_reduce(p,
+  T sum = pstl_impl::transform_reduce(p,
                                 a.begin(),
                                 a.end(),
                                 b.begin(),
                                 static_cast<T>(0.0),
-                                std::plus<T>(),
+                                pstl_impl::plus<T>(),
                                 [=](const auto &ai, const auto &bi) { return ai*bi;} );
   return sum;
 }
