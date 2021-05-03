@@ -5,21 +5,21 @@
 
 namespace impl {
 
-  template <typename reduce_t, int n, typename count_t, typename reducer_, typename transformer>
+  template <typename reduce_t, int n, typename reducer_, typename transformer>
   struct TransformReduceArg : public ReduceArg<reduce_t> {
     using reducer = reducer_;
     static constexpr int n_batch_max = 8;//?
 
-    count_t n_items;
+    int n_items;
     int n_batch;
     
     reduce_t init_value;
     reducer r;
     transformer h;    
     
-    std::array<count_t, 3> threads;
+    std::array<int, 3> threads;
 
-    TransformReduceArg(count_t n_items, reduce_t init_value, reducer r, transformer h) :
+    TransformReduceArg(int n_items, reduce_t init_value, reducer r, transformer h) :
       ReduceArg<reduce_t>(),
       n_items(n_items),
       n_batch(n),
