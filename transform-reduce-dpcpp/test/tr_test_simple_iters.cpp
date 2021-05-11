@@ -42,11 +42,11 @@ int main() {
   std::unique_ptr< compute_axpyDot<data_t, int> > fn_ptr(new compute_axpyDot(a, x.data(), y.data(), n));
   auto &fn_ref = *fn_ptr;
   
-  reduce_t r = impl::transform_reduce(p, x.begin(), x.end(), 0.0f, ONEAPI::plus<data_t>(), fn_ref);
+  reduce_t r = impl::transform_reduce(p, x.begin(), x.end(), y.end(), 0.0f, ONEAPI::plus<data_t>(), fn_ref);
 #else
   auto compute_axpyDot_ = [=, x_ = x.data(), y_ = y.data()] (const int i, const int j = 0) {y_[i] = a*x_[i]+y_[i]; return (y_[i]*x_[i]);};
 
-  reduce_t r = impl::transform_reduce(p, impl::counting_iterator(0), impl::counting_iterator(n), 0.0f, ONEAPI::plus<data_t>(), compute_axpyDot_);
+  reduce_t r = impl::transform_reduce(p, x.begin(), x.end(), y.end(), 0.0f, ONEAPI::plus<data_t>(), compute_axpyDot_);
 #endif
 
   q.wait();

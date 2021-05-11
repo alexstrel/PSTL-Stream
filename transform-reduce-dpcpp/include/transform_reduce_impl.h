@@ -47,7 +47,7 @@ namespace impl
 
 
   template <typename Policy, typename reduce_t, typename count_t, typename reducer, typename transformer, bool is_async = true>
-  reduce_t transform_reduce(Policy &policy, count_t begin_it, count_t end_it, reduce_t init, reducer r, transformer h)
+  reduce_t transform_reduce(Policy &policy, count_t begin_it, count_t end_it, count_t, reduce_t init, reducer r, transformer h)
   {
     std::array<reduce_t, 1> result{init};
     const int n_items = end_it - begin_it;

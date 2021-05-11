@@ -46,7 +46,7 @@ namespace impl {
     
     inline reduce_t operator()(reduce_t a, reduce_t b) const { return arg.r(a, b); }
 
-    inline reduce_t operator() (reduce_t &value, count_t i, count_t j, count_t k) const//j is a batch index 
+    inline reduce_t operator() (reduce_t &value, count_t i, count_t j, count_t) const//j is a batch index 
     {
       auto t = arg.h(i, j);//i is an array index, j is a batch index
       return arg.r(t, value);//?? batch version ??
