@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <execution>
 #include <numeric>
+#include <limits>
 
 #endif
 
@@ -33,11 +34,6 @@ using oneapi::dpl::counting_iterator;
 #include <malloc.h>
 #else
 #include <mm_malloc.h>
-#endif
-
-#ifdef __GNUC__ 
-#include <tbb/tbb.h>
-using namespace tbb;
 #endif
 
 constexpr int alloc_align  = (2*1024*1024);
@@ -160,9 +156,7 @@ constexpr int alloc_align  = (2*1024*1024);
 namespace pstl_impl = oneapi::dpl;
 #else
 namespace pstl_impl = std;
-#ifndef __GNUC__
 using namespace impl;
-#endif
 #endif
 
 
