@@ -1,0 +1,47 @@
+Intel Xe GPU (96 EU, 768 ALU), dpc++ and OneDPL library
+
+Modified Stream benchmark
+Version: 0.1
+Implementation: PSTL
+Running kernels 100 times
+Precision: float
+Array size: 134.2 MB (=0.1 GB)
+Total size: 402.7 MB (=0.4 GB)
+Function    MBytes/sec  Min (sec)   Max         Average     
+Copy        1169.745    0.22948     0.28705     0.26263     
+Mul         36638.716   0.00733     0.00980     0.00781     
+Add         56639.831   0.00711     0.00804     0.00732     
+Triad       58054.391   0.00694     0.00841     0.00722     
+Dot         956.704     0.28058     0.35566     0.30583 
+
+Intel TLK CPU (4 Cores @ 2.8 GHz, HT on), nvc++
+
+Modified Stream benchmark
+Version: 0.1
+Implementation: PSTL
+Running kernels 100 times
+Precision: float
+Array size: 134.2 MB (=0.1 GB)
+Total size: 402.7 MB (=0.4 GB)
+Function    MBytes/sec  Min (sec)   Max         Average     
+Copy        23629.441   0.01136     0.02179     0.01186     
+Mul         16563.851   0.01621     0.03535     0.01730     
+Add         22570.848   0.01784     0.03799     0.01881     
+Triad       21674.850   0.01858     0.03605     0.01943     
+Dot         45882.905   0.00585     0.02581     0.00643 
+
+Intel TLK CPU (4 Cores @ 2.8 GHz, HT on), gnu-11.2 + TBB
+
+Modified Stream benchmark
+Version: 0.1
+Implementation: PSTL
+Running kernels 100 times
+Precision: float
+Array size: 134.2 MB (=0.1 GB)
+Total size: 402.7 MB (=0.4 GB)
+Function    MBytes/sec  Min (sec)   Max         Average     
+Copy        41045.786   0.00654     0.00936     0.00682     
+Mul         41691.730   0.00644     0.00758     0.00666     
+Add         43589.252   0.00924     0.01086     0.00949     
+Triad       43775.172   0.00920     0.01108     0.00960     
+Dot         46340.380   0.00579     0.00705     0.00624  

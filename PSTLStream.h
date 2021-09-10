@@ -3,7 +3,7 @@
 #ifdef DPCPP_BACKEND
 
 #include <oneapi/dpl/algorithm>
-#include <oneapi/dpl/execution>
+#include <oneapi/dpl/execution>//<= why does it need tbb?
 #include <oneapi/dpl/iterator>
 #include <oneapi/dpl/random>
 
@@ -22,12 +22,7 @@
 #include <memory>
 
 //BACKEND selector
-#if defined(__NVCOMPILER_CUDA__)
-
-#include <thrust/iterator/counting_iterator.h>
-using namespace thrust;
-
-#elif defined (DPCPP_BACKEND)
+#if defined (DPCPP_BACKEND)
 
 #include <CL/sycl.hpp>
 using oneapi::dpl::counting_iterator;
@@ -40,8 +35,10 @@ using oneapi::dpl::counting_iterator;
 #include <mm_malloc.h>
 #endif
 
+#ifdef __GNUC__ 
 #include <tbb/tbb.h>
 using namespace tbb;
+#endif
 
 constexpr int alloc_align  = (2*1024*1024);
 
@@ -103,6 +100,58 @@ constexpr int alloc_align  = (2*1024*1024);
 #endif
        }
      };
+     
+ namespace impl {
+
+   template <typename IntType>
+   class counting_iterator {
+       static_assert(std::numeric_limits<IntType>::is_integer, "Cannot instantiate counting_iterator with a non-integer type");
+     public:
+       using value_type = IntType;
+       using difference_type = typename std::make_signed<IntType>::type;
+       using pointer = IntType*;
+       using reference = IntType&;
+       using iterator_category = std::random_access_iterator_tag;
+
+       counting_iterator() : value(0) { }
+       explicit counting_iterator(IntType v) : value(v) { }
+
+       value_type operator*() const { return value; }
+       value_type operator[](difference_type n) const { return value + n; }
+
+       counting_iterator& operator++() { ++value; return *this; }
+       counting_iterator operator++(int) {
+         counting_iterator result{value};
+         ++value;
+         return result;
+       }  
+       counting_iterator& operator--() { --value; return *this; }
+       counting_iterator operator--(int) {
+         counting_iterator result{value};
+         --value;
+         return result;
+       }
+       counting_iterator& operator+=(difference_type n) { value += n; return *this; }
+       counting_iterator& operator-=(difference_type n) { value -= n; return *this; }
+
+       friend counting_iterator operator+(counting_iterator const& i, difference_type n)          { return counting_iterator(i.value + n);  }
+       friend counting_iterator operator+(difference_type n, counting_iterator const& i)          { return counting_iterator(i.value + n);  }
+       friend difference_type   operator-(counting_iterator const& x, counting_iterator const& y) { return x.value - y.value;  }
+       friend counting_iterator operator-(counting_iterator const& i, difference_type n)          { return counting_iterator(i.value - n);  }
+
+       friend bool operator==(counting_iterator const& x, counting_iterator const& y) { return x.value == y.value;  }
+       friend bool operator!=(counting_iterator const& x, counting_iterator const& y) { return x.value != y.value;  }
+       friend bool operator<(counting_iterator const& x, counting_iterator const& y)  { return x.value < y.value; }
+       friend bool operator<=(counting_iterator const& x, counting_iterator const& y) { return x.value <= y.value; }
+       friend bool operator>(counting_iterator const& x, counting_iterator const& y)  { return x.value > y.value; }
+       friend bool operator>=(counting_iterator const& x, counting_iterator const& y) { return x.value >= y.value; }
+
+     private:
+       IntType value;
+   };
+
+} //impl
+
 
 
 #define IMPLEMENTATION_STRING "PSTL"
@@ -111,6 +160,9 @@ constexpr int alloc_align  = (2*1024*1024);
 namespace pstl_impl = oneapi::dpl;
 #else
 namespace pstl_impl = std;
+#ifndef __GNUC__
+using namespace impl;
+#endif
 #endif
 
 
