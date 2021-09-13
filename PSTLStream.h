@@ -187,7 +187,7 @@ template <typename T, typename Policy, class Allocator> class PSTLStream : publi
     std::vector<T, Allocator> c;
 
   public:
-    PSTLStream(Policy &p_, const int N, Allocator alloc) : p(p_), a(N, alloc), b(N, alloc), c(N, alloc)
+    PSTLStream(Policy &p_, const int N, const Allocator alloc) : p(p_), a(N, alloc), b(N, alloc), c(N, alloc)
     {}
     ~PSTLStream()
     {}
