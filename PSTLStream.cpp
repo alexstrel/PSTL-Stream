@@ -90,35 +90,24 @@ void run()
 
   // Create objects
 #ifndef DPCPP_BACKEND  
-
-  using alloc = AlignedAllocator<T>;
   
   auto policy = std::execution::par_unseq;  
-
-  std::vector<T, alloc> a(N);
-  std::vector<T, alloc> b(N);
-  std::vector<T, alloc> c(N);
-
-  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), alloc>(policy, N));
+  auto alloc  = AlignedAllocator<T>();
 
 #else
 
   sycl::queue q; //(sycl::gpu_selector{});
   
-  cl::sycl::usm_allocator<T, cl::sycl::usm::alloc::shared> alloc_(q);
-  
-  using alloc   = decltype(alloc_);
-  
   auto policy = oneapi::dpl::execution::make_device_policy(q);
   //auto policy = oneapi::dpl::execution::dpcpp_default;  
-
-  std::vector<T, alloc> a(N, alloc_);
-  std::vector<T, alloc> b(N, alloc_);
-  std::vector<T, alloc> c(N, alloc_);
-
-  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), alloc>(policy, N, alloc_));
+  cl::sycl::usm_allocator<T, cl::sycl::usm::alloc::shared> alloc(q);
 
 #endif
+  std::vector<T, decltype(alloc)> a(N, alloc);
+  std::vector<T, decltype(alloc)> b(N, alloc);
+  std::vector<T, decltype(alloc)> c(N, alloc);
+
+  std::unique_ptr<Stream<T>> stream_ptr(new PSTLStream<T, decltype(policy), decltype(alloc)>(policy, N, alloc));
 
   auto &stream = *stream_ptr;
   stream.init_arrays(0.1, 0.2, 0.0);
