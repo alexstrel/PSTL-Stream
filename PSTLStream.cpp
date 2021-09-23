@@ -40,12 +40,20 @@ int main(int argc, char *argv[])
       << "Implementation: " << IMPLEMENTATION_STRING << std::endl;
   }
 
-
   if (use_float) run<float>();
 #ifndef DPCPP_BACKEND
   else run<double>();
 #else
-  else std::cout << "Double precision is not supported by Intel Xe GPUs, use --float option for single precision tests." << std::endl;
+  else {
+    bool can_run_dp = true;
+    for (auto const& this_platform : sycl::platform::get_platforms() ) {
+      for (auto &dev : this_platform.get_devices() ) {
+        if ( dev.is_gpu() ) can_run_dp = false;
+      }
+    }
+    if ( can_run_dp ) run<double>();
+    else std::cout << "Double precision is not supported by Intel Xe GPUs, use --float option for single precision tests." << std::endl;
+  }
 #endif
  
   return 0;
@@ -97,9 +105,14 @@ void run()
 #else
 
   sycl::queue q; //(sycl::gpu_selector{});
-  
-  auto policy = oneapi::dpl::execution::make_device_policy(q);
-  //auto policy = oneapi::dpl::execution::dpcpp_default;  
+ 
+  std::cout << "Selected device: " <<
+  q.get_device().get_info<sycl::info::device::name>() << "\n";
+  std::cout << "Device vendor: " <<
+  q.get_device().get_info<sycl::info::device::vendor>() << "\n";
+ 
+  //auto policy = oneapi::dpl::execution::make_device_policy(q);
+  auto policy = oneapi::dpl::execution::dpcpp_default;  
   cl::sycl::usm_allocator<T, cl::sycl::usm::alloc::shared> alloc(q);
 
 #endif
