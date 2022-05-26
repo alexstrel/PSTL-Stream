@@ -45,14 +45,7 @@ int main(int argc, char *argv[])
   else run<double>();
 #else
   else {
-    bool can_run_dp = true;
-    for (auto const& this_platform : sycl::platform::get_platforms() ) {
-      for (auto &dev : this_platform.get_devices() ) {
-        if ( dev.is_gpu() ) can_run_dp = false;
-      }
-    }
-    if ( can_run_dp ) run<double>();
-    else std::cout << "Double precision is not supported by Intel Xe GPUs, use --float option for single precision tests." << std::endl;
+    std::cout << "Double precision is not supported by Intel Xe GPUs, use --float option for single precision tests." << std::endl;
   }
 #endif
  
@@ -100,7 +93,7 @@ void run()
 #ifndef DPCPP_BACKEND  
   
   auto policy = std::execution::par_unseq;  
-  auto alloc  = AlignedAllocator<T>();
+  auto alloc  = std::allocator<T>();
 
 #else
 

@@ -6,7 +6,7 @@ NVARCH = cc70
 
 CXXCOPT_AVX512  = -O2 -mavx512f -std=c++17 -fopenmp
 CXXCOPT_AVX2  = -O2 -mavx2 -mfma -std=c++17 -fopenmp
-LDFLAG =  -lm  -fopenmp -L/opt/intel/tbb-gnu9.3/lib -ltbb
+LDFLAG =  -lm  -fopenmp -L/opt/spack-0.16.2/opt/spack/linux-ubuntu20.04-icelake/gcc-9.3.0/intel-tbb-2020.3-f7rvthzgugwq7vl3i3cnshuqtc6trsgl/lib -ltbb
 
 NVCXXOPT     = -O2 -std=c++17 -stdpar=gpu -gpu=$(NVARCH) -gpu=managed -gpu=fma -gpu=fastmath -gpu=autocollapse -gpu=loadcache:L1 -gpu=unroll
 NVCXXOPT_X86 = -O2 -std=c++17 -stdpar=multicore	
